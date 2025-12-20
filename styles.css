@@ -1,23 +1,19 @@
-/* Reset liviano y fuente del sistema */
+/* ==========================
+   Reset liviano y base
+   ========================== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
 body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, Helvetica, sans-serif;
   color: #fff;
   background-color: #000;
 }
 
-/* Hero de fondo
-   - Si querés preservar el “tile” horizontal, quedate con tu repeat-x.
-   - Para mejor LCP/menos repaints, conviene cover + no-repeat. */
+/* ==========================
+   Hero de fondo
+   ========================== */
 .background-image {
-  /* Opción LCP-friendly: */
   background: #000 url("imagenes/fondo.png") center / cover no-repeat;
-  /* Si preferís tu efecto original: 
-     background-image: url("imagenes/fondo.png");
-     background-size: auto 100%;
-     background-repeat: repeat-x;
-     background-position: top center;
-  */
   width: 100%;
   min-height: 100vh;
   display: flex;
@@ -40,10 +36,10 @@ body {
   align-items: center;
 }
 
-/* Dimensiones explícitas para evitar CLS */
+/* Evita CLS */
 .logo {
-  width: 280px;
-  height: 150px;
+  width: 150px;
+  height: 200px;
   aspect-ratio: 1 / 1;
 }
 
@@ -51,10 +47,11 @@ body {
   margin: 10px 0 15px;
   font-size: 22px;
   font-weight: 700;
-  color: #fff;
 }
 
-/* Botón: animaciones GPU-friendly (transform/opacity) */
+/* ==========================
+   Botón principal WhatsApp
+   ========================== */
 .whatsapp-button {
   position: relative;
   overflow: hidden;
@@ -64,49 +61,39 @@ body {
   justify-content: space-around;
   background: linear-gradient(145deg, #155c3d, #0e2d1e);
   color: #fff;
-  font-size: 18px;   /* antes 24px */
+  font-size: 18px;
   font-weight: 700;
-  padding: 12px 16px;/* antes 20px */
+  padding: 12px 16px;
   border: 3px solid #fff;
-  border-radius: 8px;/* antes 10px (opcional) */
+  border-radius: 8px;
   text-decoration: none;
   margin-top: 25px;
-  gap: 8px;          /* antes 10px */
-  min-width: 180px;  /* antes 250px */
-  
-  /* Sombra estática (no animarla: costosa) */
-  box-shadow:
-  0 0 25px 6px rgba(255, 230, 0, 0.9),  /* glow principal amarillo */
-  inset 0 1px 0 rgba(255,255,255,0.25), /* brillo interno suave */
-  0 0 12px 3px rgba(255, 180, 0, 0.8);   /* halo cálido */
-
-  /* Solo animaciones composited */
+  gap: 8px;
+  min-width: 180px;
+  box-shadow: 0 0 30px 8px gold,
+              inset 0 1px 0 #ffffff33,
+              0 0 12px 2px #10392899;
   animation: heartbeat 2s infinite ease-in-out;
   transition: transform 0.3s ease-in-out;
   will-change: transform;
 }
 
-/* Brillo animado usando transform (mejor que animar "left") */
 .whatsapp-button::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;           /* punto de partida */
+  inset: 0;
   width: 50%;
-  height: 100%;
-  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.6), transparent);
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,.6), transparent);
   transform: translateX(-150%) skewX(-25deg);
   animation: shineX 3.5s infinite;
   pointer-events: none;
-  will-change: transform;
 }
 
 @keyframes shineX {
-  0%   { transform: translateX(-150%) skewX(-25deg); }
-  100% { transform: translateX(300%) skewX(-25deg); }
+  from { transform: translateX(-150%) skewX(-25deg); }
+  to   { transform: translateX(300%) skewX(-25deg); }
 }
 
-/* Heartbeat: evitamos animar box-shadow; solo escala (GPU) */
 @keyframes heartbeat {
   0%, 100% { transform: scale(1); }
   50%      { transform: scale(1.03); }
@@ -120,7 +107,6 @@ body {
 .subtitle {
   font-size: 19px;
   margin-top: 40px;
-  color: #fff;
 }
 
 .description {
@@ -130,9 +116,157 @@ body {
   margin: 35px 0 50px;
 }
 
-/* Respeto por usuarios con motion reducido */
+/* Motion reducido */
 @media (prefers-reduced-motion: reduce) {
   .whatsapp-button,
   .whatsapp-button::before { animation: none !important; }
   .whatsapp-button { transition: none; }
 }
+
+/* ==========================
+   Floating WhatsApp + burbuja
+   ========================== */
+.wa-float {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
+}
+
+.wa-float__btn {
+  width: 62px;
+  height: 62px;
+  border-radius: 999px;
+  border: 2px solid rgba(255,255,255,.35);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f3a26;
+  box-shadow: 0 0 26px 8px rgba(255,215,0,.55),
+              0 12px 30px rgba(0,0,0,.45);
+  transition: transform .15s ease;
+}
+
+.wa-float__btn:active { transform: scale(.97); }
+
+.wa-float__icon {
+  width: 30px;
+  height: 30px;
+}
+
+.wa-bubble {
+  position: absolute;
+  right: 0;
+  bottom: 76px;
+  width: min(330px, calc(100vw - 32px));
+  border-radius: 16px;
+  overflow: hidden;
+  transform: translateY(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: .18s ease;
+  background: rgba(10,14,10,.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 16px 40px rgba(0,0,0,.55);
+}
+
+.wa-bubble.is-open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.wa-bubble__header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  font-weight: 800;
+}
+
+.wa-bubble__close {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.wa-bubble__body { padding: 12px; }
+
+.wa-msg {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.1);
+  font-size: 14px;
+}
+
+.wa-bubble__footer {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.wa-input {
+  flex: 1;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: #fff;
+  padding: 10px;
+}
+
+.wa-send {
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 800;
+  background: rgba(255,215,0,.95);
+  color: #0b130c;
+  border: none;
+}
+
+/* ==========================
+   Auto redirect overlay
+   ========================== */
+.wa-redirect-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+/* 🔒 CLAVE: oculto si tiene hidden */
+.wa-redirect-overlay[hidden] {
+  display: none !important;
+}
+
+.wa-redirect-box {
+  width: min(360px, calc(100vw - 32px));
+  background: rgba(15,20,15,.92);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  box-shadow: 0 16px 40px rgba(0,0,0,.55);
+}
+
+.wa-redirect-text {
+  font-weight: 800;
+}
+
+.wa-redirect-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 3px solid rgba(255,255,255,.25);
+  border-top-color: rgba(255,215,0,.95);
+  animation: waSpin .8s linear infinite;
+}
+
+@keyframes waSpin { to { transform: rotate(360deg); } }
